@@ -69,7 +69,7 @@
     </script>
 
     <style>
-        /* 字體大小設定 (回復至較小尺寸) */
+        /* 字體大小設定 */
         html { font-size: 16px; } 
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
         .btn-nav.active { background-color: #1e40af; color: white; }
@@ -91,22 +91,13 @@
             color: #1e40af; transition: opacity 0.5s;
         }
         
-        /* 隱藏數字輸入框的預設箭頭 (Spinner) */
+        /* 隱藏數字輸入框預設箭頭 */
         input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield; /* Firefox */
-        }
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
 
-        /* Custom Styles */
         input, select, textarea { font-size: 0.95rem; }
-        .promo-box {
-            border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: center;
-            font-weight: bold; font-size: 0.9rem; line-height: 1.5;
-        }
+        
         .salary-btn {
             background-color: #e5e7eb; color: #374151;
             width: 50px; display: flex; align-items: center; justify-content: center;
@@ -114,6 +105,19 @@
         }
         .salary-btn:hover { background-color: #d1d5db; }
         .salary-btn:active { background-color: #9ca3af; }
+
+        /* On Blur Validation Error Style */
+        .error-msg {
+            background-color: #fee2e2; /* 淺紅色底 */
+            color: #991b1b; /* 深紅色字 */
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            display: none; /* 預設隱藏 */
+        }
+        .error-msg.visible { display: block; }
+        .input-error { border-color: #ef4444; border-width: 2px; }
     </style>
 </head>
 <body class="pb-20 text-gray-800">
@@ -159,10 +163,10 @@
     <section id="page-login" class="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg hidden-section">
         <div class="text-center mb-6">
             <h2 class="text-xl font-bold text-gray-800">管理員登入 Administrator Login</h2>
-            <p class="text-gray-500 text-sm mt-2">Please enter password to continue</p>
+            <p class="text-gray-500 text-sm mt-2">請輸入密碼以繼續<br>Please enter password to continue</p>
         </div>
         <div class="mb-6">
-            <input type="password" id="admin-password" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="輸入密碼 Enter password">
+            <input type="password" id="admin-password" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="輸入密碼 Enter Password">
             <p id="login-error" class="text-red-500 text-sm mt-2 hidden">密碼錯誤 / Incorrect Password</p>
         </div>
         <button onclick="checkLogin()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold text-base transition shadow">登入 Login</button>
@@ -187,37 +191,19 @@
             <form id="employer-form" class="space-y-5">
                 <input type="hidden" id="edit-doc-id"> 
                 
-                <!-- 僱主編號 -->
+                <!-- 1. 僱主編號 -->
                 <div class="flex flex-col">
                     <label class="font-bold text-gray-700 mb-1 text-base">僱主編號 (Employer Number)</label>
-                    <input type="text" id="inp-id" class="p-3 border rounded-lg w-full bg-gray-50" placeholder="例如：E2800">
+                    <input type="text" id="inp-id" class="p-3 border rounded-lg w-full bg-gray-50" placeholder="例如：E2800" onblur="validate(this)">
+                    <div class="error-msg">此欄位必須填寫</div>
                 </div>
 
-                <!-- 地區 -->
-                <div class="flex flex-col">
-                    <label class="font-bold text-gray-700 mb-1 text-base">僱主地區 (Employer Location)</label>
-                    <input type="text" id="inp-location" class="p-3 border rounded-lg w-full" placeholder="例如：將軍澳">
-                </div>
-
-                <!-- 國籍 -->
-                <div class="flex flex-col">
-                    <label class="font-bold text-gray-700 mb-1 text-base">國籍 (Nationality)</label>
-                    <select id="inp-nationality" class="p-3 border rounded-lg w-full" onchange="toggleNatOther()">
-                        <option value="" disabled selected hidden>請選擇...</option>
-                        <option value="Filipino">菲律賓 Filipino</option>
-                        <option value="Indonesian">印尼 Indonesian</option>
-                        <option value="Filipino & Indonesian">菲印 Filipino & Indonesian</option>
-                        <option value="Indonesian & Filipino">印菲 Indonesian & Filipino</option>
-                        <option value="Other">其他 (Other)</option>
-                    </select>
-                    <input type="text" id="inp-nationality-other" class="mt-2 p-3 border rounded-lg w-full hidden" placeholder="請以英文填寫，例如：Sri Lankans">
-                </div>
-
-                <!-- 家庭成員 -->
+                <!-- 2. 家庭成員 (已搬到編號下) -->
                 <div class="flex flex-col p-4 bg-gray-50 rounded-lg border">
                     <label class="font-bold text-gray-700 mb-2 text-base">家庭成員及年齡 (Employer Member & Age)</label>
                     <div id="member-list-display" class="mb-2 flex flex-wrap gap-2 min-h-[30px]"></div>
-                    <input type="hidden" id="inp-members-string">
+                    <input type="hidden" id="inp-members-string" onblur="validateMember(this)">
+                    <div class="error-msg" id="member-error">請至少新增一位家庭成員</div>
                     
                     <div class="flex gap-2 items-end">
                         <div class="flex-1">
@@ -240,11 +226,19 @@
                     </div>
                 </div>
 
-                <!-- 寵物 (列表模式) -->
+                <!-- 3. 地區 -->
+                <div class="flex flex-col">
+                    <label class="font-bold text-gray-700 mb-1 text-base">僱主地區 (Employer Location)</label>
+                    <input type="text" id="inp-location" class="p-3 border rounded-lg w-full" placeholder="例如：將軍澳" onblur="validate(this)">
+                    <div class="error-msg">此欄位必須填寫</div>
+                </div>
+
+                <!-- 4. 寵物 -->
                 <div class="flex flex-col p-4 bg-gray-50 rounded-lg border">
                     <label class="font-bold text-gray-700 mb-2 text-base">寵物 (Pets)</label>
                     <div id="pet-list-display" class="mb-2 flex flex-wrap gap-2 min-h-[30px]"></div>
-                    <input type="hidden" id="inp-pets-string">
+                    <input type="hidden" id="inp-pets-string" onblur="validatePet(this)">
+                    <div class="error-msg" id="pet-error">請至少新增一項寵物資料(或選擇無)</div>
                     
                     <div class="flex gap-2 items-end flex-wrap">
                         <div class="flex-1 min-w-[180px]">
@@ -281,25 +275,26 @@
                     </div>
                 </div>
 
-                <!-- 工人房 -->
+                <!-- 5. 工人房 -->
                 <div class="flex flex-col">
                     <label class="font-bold text-gray-700 mb-1 text-base">工人房 (Helper Room)</label>
-                    <select id="inp-room" class="p-3 border rounded-lg w-full" onchange="toggleRoomOther()">
+                    <select id="inp-room" class="p-3 border rounded-lg w-full" onchange="toggleRoomOther()" onblur="validate(this)">
                         <option value="" disabled selected hidden>請選擇...</option>
                         <option value="有工人房">有工人房</option>
                         <option value="與小孩同房">與小孩同房</option>
                         <option value="與長者同房">與長者同房</option>
                         <option value="與另外傭同房">與另外傭同房</option>
                         <option value="與女僱主同房">與女僱主同房</option>
-                        <option value="其他">其他 (手寫)</option>
+                        <option value="其他">其他</option>
                     </select>
                     <input type="text" id="inp-room-other" class="mt-2 p-3 border rounded-lg w-full hidden" placeholder="請以英文填寫">
+                    <div class="error-msg">此欄位必須填寫</div>
                 </div>
 
-                <!-- 上班日期 -->
+                <!-- 6. 上班日期 -->
                 <div class="flex flex-col">
                     <label class="font-bold text-gray-700 mb-1 text-base">上班日期 (Start Date)</label>
-                    <select id="inp-date" class="p-3 border rounded-lg w-full">
+                    <select id="inp-date" class="p-3 border rounded-lg w-full" onblur="validate(this)">
                         <option value="" disabled selected hidden>請選擇...</option>
                         <option value="盡快">盡快</option>
                         <option value="一月">一月</option>
@@ -315,24 +310,41 @@
                         <option value="十一月">十一月</option>
                         <option value="十二月">十二月</option>
                     </select>
+                    <div class="error-msg">此欄位必須填寫</div>
                 </div>
 
-                <!-- 薪金 (獨立按鈕) -->
+                <!-- 7. 薪金 -->
                 <div class="flex flex-col">
                     <label class="font-bold text-gray-700 mb-1 text-base">薪金 (Salary)</label>
                     <div class="flex items-center gap-3">
-                        <input type="number" id="inp-salary" class="p-3 border rounded-lg flex-1 text-lg" placeholder="例如：5100">
+                        <input type="number" id="inp-salary" class="p-3 border rounded-lg flex-1 text-lg" placeholder="例如：5100" onblur="validate(this)">
                         <div class="flex gap-1">
                             <div onclick="adjustSalary(-100)" class="salary-btn rounded-l-lg border border-gray-300">▼</div>
                             <div onclick="adjustSalary(100)" class="salary-btn rounded-r-lg border border-gray-300">▲</div>
                         </div>
                     </div>
+                    <div class="error-msg">此欄位必須填寫</div>
                 </div>
 
-                <!-- 語言 -->
+                <!-- 8. 國籍 (已搬到薪金下) -->
                 <div class="flex flex-col">
-                    <label class="font-bold text-gray-700 mb-1 text-base">語言要求 (Language)</label>
-                    <select id="inp-lang" class="p-3 border rounded-lg w-full">
+                    <label class="font-bold text-gray-700 mb-1 text-base">國籍要求 (Nationality Required)</label>
+                    <select id="inp-nationality" class="p-3 border rounded-lg w-full" onchange="toggleNatOther()" onblur="validate(this)">
+                        <option value="" disabled selected hidden>請選擇...</option>
+                        <option value="Filipino">菲律賓 Filipino</option>
+                        <option value="Indonesian">印尼 Indonesian</option>
+                        <option value="Filipino & Indonesian">菲印 Filipino & Indonesian</option>
+                        <option value="Indonesian & Filipino">印菲 Indonesian & Filipino</option>
+                        <option value="Other">其他 (Other)</option>
+                    </select>
+                    <input type="text" id="inp-nationality-other" class="mt-2 p-3 border rounded-lg w-full hidden" placeholder="請以英文填寫，例如：Sri Lankans">
+                    <div class="error-msg">此欄位必須填寫</div>
+                </div>
+
+                <!-- 9. 語言 -->
+                <div class="flex flex-col">
+                    <label class="font-bold text-gray-700 mb-1 text-base">語言要求 (Language Required)</label>
+                    <select id="inp-lang" class="p-3 border rounded-lg w-full" onblur="validate(this)">
                         <option value="" disabled selected hidden>請選擇...</option>
                         <option value="英文">英文</option>
                         <option value="廣東話">廣東話</option>
@@ -340,9 +352,10 @@
                         <option value="英文&廣東話">英文&廣東話</option>
                         <option value="英文&普通話">英文&普通話</option>
                     </select>
+                    <div class="error-msg">此欄位必須填寫</div>
                 </div>
 
-                <!-- 備註 -->
+                <!-- 10. 備註 -->
                 <div class="flex flex-col">
                     <label class="font-bold text-gray-700 mb-1 text-base">備註 (Remarks)</label>
                     <textarea id="inp-remarks" class="p-3 border rounded-lg w-full h-24 text-base" placeholder="非必填寫，如需要填寫備註，請以英文填寫"></textarea>
@@ -352,9 +365,12 @@
                     <i class="fa-solid fa-upload mr-2"></i> <span id="btn-save-text">上載資料</span>
                 </button>
             </form>
+            
+            <!-- Fishing Footer -->
+            <div id="fishing-footer" class="text-center text-gray-400 text-xs mt-4 hidden">V1.2</div>
         </div>
 
-        <!-- 列表區域 (詳細顯示) -->
+        <!-- 列表區域 -->
         <div id="admin-list-area" class="hidden">
             <h3 class="font-bold text-2xl mb-6 text-gray-800">已上載的資料 <span id="db-status-text" class="text-base font-normal text-gray-500"></span></h3>
             <div id="admin-records-container" class="space-y-6"></div>
@@ -366,8 +382,8 @@
         
         <!-- WhatsApp Banner -->
         <div class="mb-6 flex flex-col items-center">
-            <div id="banner-box" class="w-full max-w-2xl mb-4 p-4 rounded-lg text-center shadow-md border-l-8">
-                <p id="banner-text" class="text-lg font-bold leading-relaxed"></p>
+            <div id="banner-box" class="w-full max-w-4xl mb-6 p-4 rounded-lg text-left shadow-md border-l-8 bg-blue-50 border-blue-300 text-black">
+                <p id="banner-text" class="font-bold leading-relaxed"></p>
             </div>
             <a href="https://wa.me/85296111003" target="_blank" class="wa-btn">
                 <i class="fa-brands fa-whatsapp text-3xl"></i> <span id="wa-text">WhatsApp 9611 1003</span>
@@ -451,6 +467,28 @@
             if(!document.getElementById('page-public').classList.contains('hidden')) renderPublicList();
         }
 
+        // --- Validation Logic ---
+        window.validate = function(el) {
+            const err = el.parentElement.querySelector('.error-msg');
+            if(!el.value) {
+                el.classList.add('input-error');
+                if(err) err.classList.add('visible');
+            } else {
+                el.classList.remove('input-error');
+                if(err) err.classList.remove('visible');
+            }
+        }
+        window.validateMember = function(el) {
+            const err = document.getElementById('member-error');
+            if(!el.value) err.classList.add('visible');
+            else err.classList.remove('visible');
+        }
+        window.validatePet = function(el) {
+            const err = document.getElementById('pet-error');
+            if(!el.value) err.classList.add('visible');
+            else err.classList.remove('visible');
+        }
+
         // --- 寵物邏輯 (新) ---
         let currentPets = [];
         
@@ -487,7 +525,6 @@
             if (type === '沒有寵物') {
                 currentPets = [{text: '沒有寵物'}];
             } else {
-                // 如果之前是沒有寵物，先移除
                 if(currentPets.length === 1 && currentPets[0].text === '沒有寵物') currentPets = [];
                 
                 if (type === '其他') {
@@ -501,11 +538,13 @@
                 }
             }
             updatePetDisplay();
+            window.validatePet(document.getElementById('inp-pets-string'));
         }
 
         window.removePet = function(idx) {
             currentPets.splice(idx, 1);
             updatePetDisplay();
+            window.validatePet(document.getElementById('inp-pets-string'));
         }
 
         function updatePetDisplay() {
@@ -531,6 +570,7 @@
             v += val;
             if(v < 5100) v = 5100;
             el.value = v;
+            window.validate(el);
         }
 
         // --- 工人房邏輯 ---
@@ -555,7 +595,6 @@
             const isFishing = !document.getElementById('fishing-header').classList.contains('hidden');
             
             try {
-                // 1. 收集資料
                 const id = document.getElementById('inp-id').value;
                 const loc = document.getElementById('inp-location').value;
                 let nat = document.getElementById('inp-nationality').value;
@@ -570,23 +609,43 @@
                 const salary = document.getElementById('inp-salary').value;
                 const lang = document.getElementById('inp-lang').value;
                 
-                // 2. 驗證
-                let errors = [];
-                if (!id) errors.push("僱主編號");
-                if (!loc) errors.push("地區");
-                if (!nat) errors.push("國籍");
-                if (!memStr) errors.push("家庭成員");
-                if (!petStr) errors.push("寵物");
-                if (!room) errors.push("工人房");
-                if (!date) errors.push("上班日期");
-                if (!salary) errors.push("薪金");
-                if (!lang) errors.push("語言");
+                // 檢查是否所有欄位已填 (Trigger validators)
+                const inputs = document.querySelectorAll('#employer-form input, #employer-form select');
+                let hasError = false;
+                inputs.forEach(i => {
+                    if(i.id !== 'inp-remarks' && !i.hidden && !i.value) { // Skip hidden and remarks
+                        // Special check for dynamic lists
+                        if(i.id === 'inp-members-string' || i.id === 'inp-pets-string') {
+                            if(!i.value) hasError = true;
+                        } else if(i.id.includes('other') && i.classList.contains('hidden')) {
+                            // ignore hidden other
+                        } else if(i.id.includes('add')) {
+                            // ignore add controls
+                        } else {
+                            if(i.tagName === 'SELECT' && i.value === '') hasError = true;
+                            if(i.tagName === 'INPUT' && i.value === '') hasError = true;
+                        }
+                    }
+                });
+                
+                // Force validate display
+                window.validate(document.getElementById('inp-id'));
+                window.validate(document.getElementById('inp-location'));
+                window.validate(document.getElementById('inp-nationality'));
+                window.validate(document.getElementById('inp-room'));
+                window.validate(document.getElementById('inp-date'));
+                window.validate(document.getElementById('inp-salary'));
+                window.validate(document.getElementById('inp-lang'));
+                window.validateMember(document.getElementById('inp-members-string'));
+                window.validatePet(document.getElementById('inp-pets-string'));
 
-                if (errors.length > 0) throw new Error('你漏寫了問題，請檢查和填寫所有問題才可以上載成功');
+                if (!id || !loc || !nat || !memStr || !petStr || !room || !date || !salary || !lang) {
+                    throw new Error('你漏寫了問題，請檢查和填寫所有問題才可以上載成功');
+                }
                 
                 if (parseInt(salary) < 5100) {
                     alert('薪金錯誤，重新填寫');
-                    throw new Error('薪金錯誤 (需 >= 5100)');
+                    throw new Error('薪金錯誤');
                 }
 
                 const data = {
@@ -677,20 +736,25 @@
             }
 
             document.getElementById('inp-room').value = e.room; 
+            if(e.room && !['有工人房','有工人房','與小孩同房','與長者同房','與另外傭同房','與女僱主同房'].includes(e.room)){
+                 // Simple logic for custom room
+                 document.getElementById('inp-room').value = '其他';
+                 toggleRoomOther();
+                 document.getElementById('inp-room-other').value = e.room;
+            }
+
             document.getElementById('inp-date').value = e.date;
             document.getElementById('inp-salary').value = e.salary;
             document.getElementById('inp-lang').value = e.lang;
             document.getElementById('inp-remarks').value = e.remarks || '';
             document.getElementById('edit-doc-id').value = docId;
             
-            // Restore Members
             currentMembers = [];
             e.members.split(', ').forEach(p => currentMembers.push({text: p}));
             updateMemberDisplay();
 
-            // Restore Pets
             currentPets = [];
-            e.pets.split(', ').forEach(p => currentPets.push({text: p}));
+            if(e.pets) e.pets.split(', ').forEach(p => currentPets.push({text: p}));
             updatePetDisplay();
 
             switchAdminSub('input');
@@ -735,6 +799,7 @@
             document.getElementById('admin-input-area').classList.add('hidden');
             document.getElementById('admin-list-area').classList.add('hidden');
             document.getElementById('fishing-header').classList.add('hidden');
+            document.getElementById('fishing-footer').classList.add('hidden');
 
             if (sub === 'input') {
                 document.getElementById('admin-input-area').classList.remove('hidden');
@@ -742,6 +807,7 @@
             } else if (sub === 'fishing') {
                 document.getElementById('admin-input-area').classList.remove('hidden');
                 document.getElementById('fishing-header').classList.remove('hidden');
+                document.getElementById('fishing-footer').classList.remove('hidden');
                 generateFishingData();
             } else if (sub === 'list') {
                 document.getElementById('admin-list-area').classList.remove('hidden');
@@ -789,8 +855,8 @@
         window.toggleAgeInput = function() {
             const type = document.getElementById('mem-type').value;
             const group = document.getElementById('age-input-group');
-            if (type === '成人') group.classList.add('hidden'); // Only Adult hides
-            else group.classList.remove('hidden'); // Others show
+            if (type === '成人') group.classList.add('hidden'); 
+            else group.classList.remove('hidden');
         };
         window.addMember = function() {
             const type = document.getElementById('mem-type').value;
@@ -801,29 +867,18 @@
             currentMembers.push({text});
             updateMemberDisplay();
             document.getElementById('mem-age').value = '';
+            window.validateMember(document.getElementById('inp-members-string'));
         };
         window.removeMember = function(i) {
             currentMembers.splice(i, 1);
             updateMemberDisplay();
+            window.validateMember(document.getElementById('inp-members-string'));
         };
         function updateMemberDisplay() {
             const c = document.getElementById('member-list-display');
-            
-            // Sort order logic
-            const sortOrder = ['成人','小孩','長者','男孩','女孩','婆婆','公公'];
-            // Mapping for display purposes is tricky with raw strings like "1小孩(5歲)"
-            // But user just asked for sorting the OPTIONS in select, I did that.
-            // He also asked "所有選項排序是...", which applies to select options.
-            // I will just render them in insertion order or grouped. Grouping is safer.
-            // Let's just render as added for now to allow deletion correctly by index.
-            
             c.innerHTML = currentMembers.map((m,i)=>`<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-base flex items-center">${m.text} <button type="button" onclick="removeMember(${i})" class="ml-2 text-red-500 font-bold">&times;</button></span>`).join('');
-            
-            // Consolidate for string
-            // Logic: 2成人, 1小孩(5歲), ...
-            let adult=0, others=[];
-            currentMembers.forEach(m=>{ if(m.text.includes('成人')) adult++; else others.push(m.text); });
-            let s=[]; if(adult>0)s.push(`${adult}成人`); s=s.concat(others);
+            let s = currentMembers.map(m=>m.text); 
+            // Simplified summary logic for display string in admin not strictly needed, saving full list
             document.getElementById('inp-members-string').value = s.join(', ');
         }
 
@@ -834,26 +889,27 @@
             document.getElementById('inp-id').value = 'U' + (maxU + 1);
             const st = Object.keys(locationMap);
             document.getElementById('inp-location').value = st[Math.floor(Math.random()*st.length)];
-            const nats = ['Filipino', 'Indonesian', 'Filipino & Indonesian', 'Indonesian & Filipino']; // Exclude Other
+            
+            // 國籍隨機 (排除其他)
+            const nats = ['Filipino', 'Indonesian', 'Filipino & Indonesian', 'Indonesian & Filipino']; 
             document.getElementById('inp-nationality').value = nats[Math.floor(Math.random()*nats.length)];
             toggleNatOther();
 
-            // Family: Max 2 Adults, 2 Kids, 2 Elders
+            // Family
             currentMembers = [];
-            const a = Math.floor(Math.random()*2)+1; // 1-2 Adults
+            const a = Math.floor(Math.random()*2)+1; 
             for(let i=0; i<a; i++) currentMembers.push({text: "1成人"});
-            
             if(Math.random()>0.5) {
-                const k = Math.floor(Math.random()*2)+1; // 1-2 Kids
+                const k = Math.floor(Math.random()*2)+1; 
                 for(let i=0; i<k; i++) currentMembers.push({text: `1小孩(${Math.floor(Math.random()*17)}歲)`});
             }
             if(Math.random()>0.7) {
-                const e = Math.floor(Math.random()*2)+1; // 1-2 Elders
+                const e = Math.floor(Math.random()*2)+1; 
                 for(let i=0; i<e; i++) currentMembers.push({text: `1長者(${Math.floor(Math.random()*31)+60}歲)`});
             }
             updateMemberDisplay();
 
-            // Pets: No, Small, Medium, Big, Cat. Qty 1-2
+            // Pets
             currentPets = [];
             const pTypes = ['沒有寵物', '小狗', '中狗', '大狗', '貓'];
             const p = pTypes[Math.floor(Math.random()*pTypes.length)];
@@ -865,16 +921,16 @@
             }
             updatePetDisplay();
 
-            // Room: Probabilities
+            // Room
             const rOpts = ['有工人房','有工人房','有工人房','與小孩同房','與長者同房','與另外傭同房','與女僱主同房'];
             document.getElementById('inp-room').value = rOpts[Math.floor(Math.random()*rOpts.length)];
             toggleRoomOther();
 
-            // Salary: 5500 most
+            // Salary
             const sals = [5100, 5300, 5500, 5500, 5500, 5800, 6000];
             document.getElementById('inp-salary').value = sals[Math.floor(Math.random()*sals.length)];
 
-            // Lang: Eng most
+            // Lang
             const langs = ['英文','英文','英文','廣東話','普通話','英文&廣東話','英文&普通話'];
             document.getElementById('inp-lang').value = langs[Math.floor(Math.random()*langs.length)];
 
@@ -890,6 +946,9 @@
             toggleNatOther();
             toggleRoomOther();
             togglePetInputs();
+            // Clear error states
+            document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('visible'));
+            document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
         };
 
         // --- 公開列表 ---
@@ -902,23 +961,29 @@
             const pageData = activeEmps.slice(start, start + itemsPerPage);
             const isEn = currentLang === 'english';
             
-            // Banner Text & Styling
+            // Banner Styling
             const bannerBox = document.getElementById('banner-box');
             const bannerText = document.getElementById('banner-text');
+            // Reset base styles
+            bannerBox.className = "w-full max-w-4xl mb-6 p-4 rounded-lg text-left shadow-md border-l-8 bg-blue-50 border-blue-300 text-black";
+            
             if(isEn) {
-                bannerBox.className = "w-full max-w-3xl mb-6 p-6 rounded-xl text-center shadow-md border-l-8 border-green-500 bg-green-50";
-                bannerText.innerText = "💵All helpers NO placement fee, NO agency fee, NO registration fee.\nApply job or refer your friends, click the button below to WhatsApp us.";
+                bannerText.innerHTML = "💵 All helpers NO placement fee, NO agency fee, NO registration fee.<br>💼 Apply job or refer your friends? Click the green button below to WhatsApp us.";
+                bannerText.style.fontSize = "1.2rem"; // Base + 2px roughly
                 document.getElementById('public-title').innerText = 'Employer List';
+                document.getElementById('public-title').style.fontSize = "1.9rem"; // +1px relative
                 document.getElementById('nav-indonesian').innerText = '🇮🇩 Indonesian';
                 document.getElementById('btn-prev').innerText = 'Prev';
                 document.getElementById('btn-next').innerText = 'Next';
             } else {
-                bannerBox.className = "w-full max-w-3xl mb-6 p-6 rounded-xl text-center shadow-md border-l-8 border-red-500 bg-red-50";
-                bannerText.innerText = "💵Semua pekerja tanpa biaya penempatan, tanpa biaya agen, dan tanpa biaya pendaftaran.\nIngin melamar kerja atau merekomendasikan teman? Klik tombol di bawah untuk WhatsApp kami.";
+                bannerText.innerHTML = "💵 Semua pekerja tanpa biaya penempatan, tanpa biaya agen, dan tanpa biaya pendaftaran.<br>💼 Ingin melamar kerja atau merekomendasikan teman? Klik tombol hijau di bawah untuk WhatsApp kami.";
+                bannerText.style.fontSize = "1.2rem"; 
                 document.getElementById('public-title').innerText = 'Daftar Majikan';
+                document.getElementById('public-title').style.fontSize = "1.9rem";
                 document.getElementById('nav-indonesian').innerText = '🇮🇩 Indonesian';
-                document.getElementById('btn-prev').innerText = 'Sebelumnya';
-                document.getElementById('btn-next').innerText = 'Selanjutnya';
+                document.getElementById('btn-prev').innerText = 'Sebelumnya'; // Fixed from text request (text says Sebelumnya in code, user asked for fix on Next)
+                // User asked: "Selanjutnya" -> "Berikutnya"
+                document.getElementById('btn-next').innerText = 'Berikutnya';
             }
 
             if(pageData.length === 0) {
@@ -929,8 +994,8 @@
 
             pageData.forEach(e => {
                 const tLoc = translateText(e.location, currentLang);
-                const tNat = e.nationality; // Keep English
-                const tMem = translateText(e.members, currentLang); // Remove (s) in helper
+                const tNat = e.nationality; // Keep English for Nat
+                const tMem = translateText(e.members, currentLang);
                 const tPet = translatePets(e.pets, currentLang);
                 const tRoom = getDict(e.room, currentLang);
                 const tDate = getDict(e.date, currentLang);
@@ -939,7 +1004,7 @@
                 if (!isEn && e.remarks) tRem = e.remarks.replace(/好僱主/g, 'Majikan Baik').replace(/準時出糧/g, 'Gaji Tepat Waktu');
 
                 // Formatting
-                const idD = isEn ? `Employer Number: ${e.id}` : `Nomor Pemberi Kerja: ${e.id}`;
+                const idD = isEn ? `Employer Number: ${e.id}` : `Nomor Majikan: ${e.id}`;
                 const salD = isEn ? `Salary $${e.salary}` : `Gaji $${e.salary}`;
 
                 // Red text logic
@@ -949,28 +1014,30 @@
 
                 const L = {
                     loc: isEn ? 'Employer Location' : 'Lokasi Majikan',
-                    nat: isEn ? 'Nationality' : 'Kewarganegaraan',
+                    nat: isEn ? 'Nationality' : 'kebangsaan',
                     fam: isEn ? 'Employer Member & Age' : 'Anggota Keluarga & Usia',
                     pets: isEn ? 'Pets' : 'Hewan Peliharaan',
                     room: isEn ? 'Helper Room' : 'Kamar Pembantu',
-                    date: isEn ? 'START of WORK DAY' : 'Awal Hari Kerja',
+                    date: isEn ? 'START of WORK DAY' : 'Mulai Hari Kerja',
                     lang: isEn ? 'Language' : 'Bahasa',
                     rem: isEn ? 'Remarks' : 'Catatan'
                 };
 
+                // Order Logic:
+                // 1. Nat, 2. Lang, 3. Family, 4. Location, 5. Pets, 6. Room, 7. Date
                 const html = `
                     <div class="bg-white rounded-xl shadow-xl border-t-8 border-blue-600 overflow-hidden flex flex-col p-6 space-y-4">
                         <div class="flex flex-col border-b pb-3 mb-2">
                             <h3 class="text-2xl font-bold text-gray-900">${idD}</h3>
                             <span class="text-2xl font-bold text-green-600 mt-1">${salD}</span>
                         </div>
-                        <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.loc}</p><p class="font-medium text-gray-800 text-xl">${tLoc}</p></div>
                         <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.nat}</p><p class="font-medium text-gray-800 text-xl">${tNat}</p></div>
+                        <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.lang}</p><p class="font-medium text-blue-800 text-xl">${tLang}</p></div>
                         <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.fam}</p><p class="font-medium text-gray-800 text-xl">${tMem}</p></div>
+                        <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.loc}</p><p class="font-medium text-gray-800 text-xl">${tLoc}</p></div>
                         <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.pets}</p><p class="${petClass} text-xl">${tPet}</p></div>
                         <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.room}</p><p class="${roomClass} text-xl">${tRoom}</p></div>
                         <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.date}</p><p class="${dateClass} text-xl">${tDate}</p></div>
-                        <div><p class="text-sm text-gray-400 font-bold uppercase tracking-wide">${L.lang}</p><p class="font-medium text-blue-800 text-xl">${tLang}</p></div>
                         ${e.remarks ? `<div class="bg-yellow-50 p-3 rounded border border-yellow-100"><p class="text-sm text-gray-500 font-bold uppercase">${L.rem}</p><p class="text-lg text-gray-700 italic">${tRem}</p></div>` : ''}
                     </div>
                 `;
@@ -990,7 +1057,6 @@
             let res = text;
             for(let cn in locationMap) { if(res.includes(cn)) res = res.replace(cn, locationMap[cn]); }
             
-            // Remove plural (s) for English
             if(lang === 'english') {
                 res = res.replace(/成人/g, ' Adult')
                          .replace(/小孩/g, ' Child')
@@ -1016,8 +1082,6 @@
         function translatePets(text, lang) {
             if(!text) return '-';
             if(text === '沒有寵物') return getDict('沒有寵物', lang);
-            
-            // Split by comma for multiple pets
             const parts = text.split(', ');
             const translatedParts = parts.map(p => {
                 const match = p.match(/^(\d+)(.+)$/);
@@ -1035,7 +1099,6 @@
         function getDict(key, lang) {
             const t = lang === 'english' ? 'en' : 'id';
             if(dict[key] && dict[key][t]) return dict[key][t];
-            // Fallback check for "Other" (custom text)
             if(key && key.length > 0) return key; 
             return '-';
         }
